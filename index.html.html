@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sungyoon kim's To-Do ✨</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: "Pretendard", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .app {
+      background: white;
+      width: 360px;
+      padding: 24px;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .input-box {
+      display: flex;
+      gap: 8px;
+    }
+
+    input {
+      flex: 1;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      font-size: 14px;
+    }
+
+    button.add {
+      background: #7f7cff;
+      border: none;
+      color: white;
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 20px;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f6f7ff;
+      padding: 10px 14px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    li.done span {
+      text-decoration: line-through;
+      color: #aaa;
+    }
+
+    li span {
+      flex: 1;
+      cursor: pointer;
+    }
+
+    .delete {
+      background: none;
+      border: none;
+      color: #ff6b6b;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>📝 To-Do List</h1>
+
+    <div class="input-box">
+      <input id="todoInput" placeholder="할 일을 입력해줘…" />
+      <button class="add" onclick="addTodo()">추가</button>
+    </div>
+
+    <ul id="todoList"></ul>
+  </div>
+
+  <script>
+    const input = document.getElementById("todoInput");
+    const list = document.getElementById("todoList");
+
+    // 로컬스토리지에서 불러오기
+    let todos = JSON.parse(localStorage.getItem("todos")) || [];
+
+    function saveTodos() {
+      localStorage.setItem("todos", JSON.stringify(todos));
+    }
+
+    function renderTodos() {
+      list.innerHTML = "";
+      todos.forEach((todo, index) => {
+        const li = document.createElement("li");
+        if (todo.done) li.classList.add("done");
+
+        const span = document.createElement("span");
+        span.textContent = todo.text;
+        span.onclick = () => {
+          todo.done = !todo.done;
+          saveTodos();
+          renderTodos();
+        };
+
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "✖";
+        delBtn.className = "delete";
+        delBtn.onclick = () => {
+          todos.splice(index, 1);
+          saveTodos();
+          renderTodos();
+        };
+
+        li.append(span, delBtn);
+        list.appendChild(li);
+      });
+    }
+
+    function addTodo() {
+      if (input.value.trim() === "") return;
+
+      todos.push({
+        text: input.value,
+        done: false
+      });
+
+      input.value = "";
+      saveTodos();
+      renderTodos();
+    }
+
+    input.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") addTodo();
+    });
+
+    // 처음 로드할 때
+    renderTodos();
+  </script>
+</body>
+</html>
