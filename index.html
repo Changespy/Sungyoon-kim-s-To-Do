@@ -29,7 +29,7 @@
 
     h1 {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
     .input-box {
@@ -45,14 +45,37 @@
       font-size: 14px;
     }
 
+    button {
+      cursor: pointer;
+    }
+
     button.add {
       background: #7f7cff;
       border: none;
       color: white;
       padding: 10px 14px;
       border-radius: 10px;
-      cursor: pointer;
       font-size: 14px;
+    }
+
+    .filters {
+      display: flex;
+      gap: 6px;
+      margin-top: 14px;
+      justify-content: center;
+    }
+
+    .filters button {
+      border: none;
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: #eee;
+      font-size: 12px;
+    }
+
+    .filters button.active {
+      background: #7f7cff;
+      color: white;
     }
 
     ul {
@@ -64,7 +87,7 @@
     li {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      gap: 8px;
       background: #f6f7ff;
       padding: 10px 14px;
       border-radius: 12px;
@@ -82,12 +105,18 @@
       cursor: pointer;
     }
 
+    li input.edit {
+      flex: 1;
+      padding: 6px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
     .delete {
       background: none;
       border: none;
       color: #ff6b6b;
       font-size: 16px;
-      cursor: pointer;
     }
 
     @keyframes fadeIn {
@@ -111,39 +140,86 @@
       <button class="add" onclick="addTodo()">추가</button>
     </div>
 
+    <div class="filters">
+      <button onclick="setFilter('all')" class="active">전체</button>
+      <button onclick="setFilter('active')">진행중</button>
+      <button onclick="setFilter('done')">완료</button>
+    </div>
+
     <ul id="todoList"></ul>
   </div>
 
   <script>
     const input = document.getElementById("todoInput");
     const list = document.getElementById("todoList");
+    const filterButtons = document.querySelectorAll(".filters button");
 
-    // 로컬스토리지에서 불러오기
     let todos = JSON.parse(localStorage.getItem("todos")) || [];
+    let currentFilter = "all";
 
     function saveTodos() {
       localStorage.setItem("todos", JSON.stringify(todos));
     }
 
+    function setFilter(filter) {
+      currentFilter = filter;
+      filterButtons.forEach(btn => btn.classList.remove("active"));
+      event.target.classList.add("active");
+      renderTodos();
+    }
+
+    function getFilteredTodos() {
+      if (currentFilter === "active") {
+        return todos.filter(t => !t.done);
+      }
+      if (currentFilter === "done") {
+        return todos.filter(t => t.done);
+      }
+      return todos;
+    }
+
     function renderTodos() {
       list.innerHTML = "";
-      todos.forEach((todo, index) => {
+
+      getFilteredTodos().forEach(todo => {
         const li = document.createElement("li");
         if (todo.done) li.classList.add("done");
 
         const span = document.createElement("span");
         span.textContent = todo.text;
+
+        // 완료 토글
         span.onclick = () => {
           todo.done = !todo.done;
           saveTodos();
           renderTodos();
         };
 
+        // ✨ 수정 기능 (더블클릭)
+        span.ondblclick = () => {
+          const editInput = document.createElement("input");
+          editInput.className = "edit";
+          editInput.value = todo.text;
+
+          editInput.onblur = () => {
+            todo.text = editInput.value.trim() || todo.text;
+            saveTodos();
+            renderTodos();
+          };
+
+          editInput.onkeypress = (e) => {
+            if (e.key === "Enter") editInput.blur();
+          };
+
+          li.replaceChild(editInput, span);
+          editInput.focus();
+        };
+
         const delBtn = document.createElement("button");
         delBtn.textContent = "✖";
         delBtn.className = "delete";
         delBtn.onclick = () => {
-          todos.splice(index, 1);
+          todos = todos.filter(t => t !== todo);
           saveTodos();
           renderTodos();
         };
@@ -170,7 +246,6 @@
       if (e.key === "Enter") addTodo();
     });
 
-    // 처음 로드할 때
     renderTodos();
   </script>
 </body>
